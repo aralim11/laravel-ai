@@ -2,16 +2,16 @@
 
 namespace App\Ai\Agents;
 
+use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
-use Laravel\Ai\Contracts\HasTools;
-use Laravel\Ai\Contracts\Tool;
+use Laravel\Ai\Contracts\HasStructuredOutput;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Stringable;
 
-class PersonalAssistant implements Agent, Conversational, HasTools
+class PersonalAssistant implements Agent, Conversational, HasStructuredOutput
 {
     use Promptable, RemembersConversations;
 
@@ -28,18 +28,32 @@ class PersonalAssistant implements Agent, Conversational, HasTools
      *
      * @return Message[]
      */
-    public function messages(): iterable
-    {
-        return [];
-    }
+    // public function messages(): iterable
+    // {
+    //     return [];
+    // }
 
     /**
      * Get the tools available to the agent.
      *
      * @return Tool[]
      */
-    public function tools(): iterable
+    // public function tools(): iterable
+    // {
+    //     return [];
+    // }
+
+    /**
+     * Get the agent's structured output schema definition.
+     */
+    public function schema(JsonSchema $schema): array
     {
-        return [];
+        return [
+            'score' => $schema->string(),
+            'metadata' => $schema->object(fn ($schema) => [
+                'confidence' => $schema->string()->enum(['low', 'medium', 'high'])->required(),
+                'language' => $schema->string()->required(),
+            ])->required(),
+        ];
     }
 }

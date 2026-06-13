@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Ai\Agents\PersonalAssistant;
+use App\Models\User;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -17,15 +18,18 @@ class AssistantChat extends Command
     public function handle()
     {
         while (true) {
-            $input = $this->ask('Ask me a question (exit to stop)');
+            $user_id = $this->ask('Enter user ID (exit to stop): ');
+            $question = $this->ask('Enter question (exit to stop): ');
 
-            if ($input === 'exit') {
+            if ($user_id === 'exit' || $question === 'exit') {
                 $this->info('Goodbye 👋');
                 break;
             }
 
-            $response = (new PersonalAssistant)
-                ->prompt($input);
+            $user = User::find($user_id, 'id');
+
+            $response = (new PersonalAssistant)->forUser($user)
+                ->prompt($question);
 
             $this->info('Answer: '.$response);
         }
