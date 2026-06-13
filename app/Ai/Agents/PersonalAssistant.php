@@ -9,6 +9,7 @@ use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasStructuredOutput;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
+use Laravel\Ai\Providers\Tools\WebSearch;
 use Stringable;
 
 class PersonalAssistant implements Agent, Conversational, HasStructuredOutput
@@ -20,7 +21,10 @@ class PersonalAssistant implements Agent, Conversational, HasStructuredOutput
      */
     public function instructions(): Stringable|string
     {
-        return 'You are a helpful personal assistant. Your name is X';
+        return 'You are an advanced Laravel documentation assistant. Your job is to answer questions '.
+               'by searching across the entire laravel.com ecosystem. Do not guess information or rely '.
+               'solely on your training data; always run a broad web search targeting laravel.com '.
+               'to find the most comprehensive, holistic answer covering all aspects of the query.';
     }
 
     /**
@@ -34,26 +38,29 @@ class PersonalAssistant implements Agent, Conversational, HasStructuredOutput
     // }
 
     /**
-     * Get the tools available to the agent.
-     *
-     * @return Tool[]
-     */
-    // public function tools(): iterable
-    // {
-    //     return [];
-    // }
-
-    /**
      * Get the agent's structured output schema definition.
      */
     public function schema(JsonSchema $schema): array
     {
         return [
-            'score' => $schema->string(),
+            'score' => $schema->integer()->required(),
+            'description' => $schema->string()->required(),
             'metadata' => $schema->object(fn ($schema) => [
                 'confidence' => $schema->string()->enum(['low', 'medium', 'high'])->required(),
                 'language' => $schema->string()->required(),
             ])->required(),
+        ];
+    }
+
+    /**
+     * Get the tools available to the agent.
+     *
+     * @return Tool[]
+     */
+    public function tools(): iterable
+    {
+        return [
+            (new WebSearch)->max(5)->allow(['laravel.com']),
         ];
     }
 }
